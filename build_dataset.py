@@ -36,7 +36,7 @@ for y in [2015,2016,2017,2018,2019,2020]:
         month_dir = os.path.join(year_dir,'%d-%02d'%(y,m))
         if not os.path.exists(month_dir):
             os.mkdir(month_dir)
-        for d in range(1,31):
+        for d in range(1,32):
             if d<day:
                 continue
             out_path = os.path.join(month_dir,"%d-%02d-%02d.json.gz"%(y,m,d))
