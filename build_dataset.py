@@ -23,7 +23,7 @@ root_dir = 'issuecomment'
 if not os.path.exists(root_dir):
     os.mkdir(root_dir)
 
-s = requests.Session()
+# s = requests.Session()
 for y in [2015,2016,2017,2018,2019,2020]:
     if y<year:
         continue
@@ -39,24 +39,33 @@ for y in [2015,2016,2017,2018,2019,2020]:
         for d in range(1,31):
             if d<day:
                 continue
-            out_path = os.path.join(month_dir,"%d-%02d-%02d.json"%(y,m,d))
-            with open(out_path,'w') as f:
+            out_path = os.path.join(month_dir,"%d-%02d-%02d.json.gz"%(y,m,d))
+            with gzip.open(out_path,'wt') as f:
                 for h in range(24):
-                    r = s.get("https://data.gharchive.org/%d-%02d-%02d-%d.json.gz"%(y,m,d,h))
+                    r = requests.get("https://data.gharchive.org/%d-%02d-%02d-%d.json.gz"%(y,m,d,h))
                     if not r.ok:
                         break
-                    lines = gzip.decompress(r.content).decode('utf-8').split('\n')[:-1]
-                    del r
-                    for l in lines:
+                    try:
+                        lines = gzip.decompress(r.content)
+                        lines = lines.split(b'\n')
+                    except MemoryError:
+                        with open("%d-%02d-%02d-%d.json.gz"%(y,m,d,h),'wb') as gz:
+                            gz.write(r.content)
+                        continue
+                    for l in lines[:-1]:
+                        l = l.decode('utf-8')
                         j = json.loads(l)
                         if j['type'] == 'IssueCommentEvent':
-                            save = {
-                                'repo_name':j['repo']['name'],
-                                'actor_login':j['actor']['login'],
-                                'created_at':j['created_at'],
-                                'issue_id':j['payload']['issue']['id'],
-                                'body':j['payload']['comment']['body']
-                            }
+                            try:
+                                save = {
+                                    'repo_name':j['repo']['name'],
+                                    'actor_login':j['actor']['login'],
+                                    'created_at':j['created_at'],
+                                    'issue_id':j['payload']['issue']['id'],
+                                    'body':j['payload']['comment']['body']
+                                }
+                            except:
+                                continue
                             json.dump(save,f)
                             f.write('\n')
                     print(y,m,d,h)

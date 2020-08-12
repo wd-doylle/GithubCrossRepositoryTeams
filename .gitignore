@@ -2,7 +2,8 @@
 OSLOM/Edges*
 *.dat
 *.json
-issuecommet/
+issuecomment/
 *.txt
 *.ipynb
 *.bp
+*.gz
