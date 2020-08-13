@@ -1,33 +1,27 @@
 import json
 import os
+import gzip
 
-year = 0
-month = 0
-day = 0
+root_dir = 'issuecomment'
 
-years = os.listdir('issuecomment')
-months = os.listdir('issuecomment/'+years[year])
-days = os.listdir('issuecomment/'+years[year]+'/'+months[month])
+
 repos = set()
-repo_detials = []
-for y in range(year,len(years)):
-    months = os.listdir('issuecomment/'+years[y])
-    for m in range(month,len(months)):
-        days = os.listdir('issuecomment/'+years[y]+'/'+months[m])
-        for d in range(day,len(days)):
-            with open('issuecomment/'+years[y]+'/'+months[m]+'/'+days[d]) as ic:
-                for line in ic.readlines():
-                    j = json.loads(line)
-                    repo = {
-                        'id':j['repo_id'],
-                        'full_name':j['repo_name']
-                    }
-                    if not repo['full_name'] in repos:
-                        repos.add(repo['full_name'])
-                        repo_detials.append(repo)
+with open('repos.txt','w') as rp:
+    for y in [2015,2016,2017,2018,2019,2020]:
+        year_dir = os.path.join(root_dir,str(y))
+        for m in range(1,13):
+            month_dir = os.path.join(year_dir,'%d-%02d'%(y,m))
+            for d in range(1,32):
+                file_path = os.path.join(month_dir,"%d-%02d-%02d.json.gz"%(y,m,d))
+                if not os.path.exists(file_path):
+                    continue
+                with gzip.open(file_path,'rt') as f:
+                    for line in f.readlines():
+                        j = json.loads(line)
+                        repo = j['repo_name']
+                        if not repo in repos:
+                            repos.add(repo)
+                            rp.write(repo+'\n')
             print(y,m,d)
 
 
-
-with open('repos.json','w') as rp:
-    json.dump(repo_detials,rp)

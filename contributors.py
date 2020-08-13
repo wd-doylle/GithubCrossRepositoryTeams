@@ -18,11 +18,10 @@ finally:
 
 index = 0
 repos = []
-with open('repos.json') as rj:
-    j = json.load(rj)
-    for i in range(len(j)):
-        repos.append(j[i]['full_name'])
-        if j[i]['full_name'] in tasks:
+with open('repos.txt') as rj:
+    for i,repo in enumerate(rj.readlines()):
+        repos.append(repo)
+        if repo in tasks:
             index = i
     print(len(repos))
 
@@ -52,7 +51,7 @@ def saving(repo,contributors,tasks):
         json.dump(tasks,cbp)
 
 
-def main(repo,auth_account,proc_cnt):
+def run(repo,auth_account,proc_cnt):
 
     page = 1
     contributors = []
@@ -112,7 +111,7 @@ def consumer(task_queue,tasks,result_queue,auth_account,proc_cnt):
             break
         repo = next_task
         logging.warning(next_task)
-        contrs = main(repo,auth_account,proc_cnt)
+        contrs = run(repo,auth_account,proc_cnt)
         task_queue.task_done() # Must be called the same times as .get()
         if contrs:
             result_queue.put([repo,contrs])

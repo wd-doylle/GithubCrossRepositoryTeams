@@ -3,6 +3,7 @@ import urllib3
 import gzip
 import json
 import os
+import re
 
 try:
     cbp = open('build_dataset.bp')
@@ -76,3 +77,28 @@ for y in [2015,2016,2017,2018,2019,2020]:
         day = 1
     year = y+1
     month = 1
+
+
+for file in os.listdir('.'):
+    res = re.match("([0-9]{4})-([0-9]{2})-([0-9]{2})-([0-9]{1,2}).json.gz",file)
+    if res:
+        y,m,d,h = [int(i) for i in res.groups()]
+        with gzip.open(file,'rt') as gz:
+            out_path = os.path.join(root_dir,str(y),'%d-%02d'%(y,m),"%d-%02d-%02d.json.gz"%(y,m,d))
+            with gzip.open(out_path,'at') as f:
+                for line in gz.readlines():
+                    j = json.loads(line)
+                    if j['type'] == 'IssueCommentEvent':
+                        try:
+                            save = {
+                                'repo_name':j['repo']['name'],
+                                'actor_login':j['actor']['login'],
+                                'created_at':j['created_at'],
+                                'issue_id':j['payload']['issue']['id'],
+                                'body':j['payload']['comment']['body']
+                            }
+                        except:
+                            continue
+                        json.dump(save,f)
+                        f.write('\n')
+        print(y,m,d,h)
