@@ -20,6 +20,7 @@ index = 0
 repos = []
 with open('repos.txt') as rj:
     for i,repo in enumerate(rj.readlines()):
+        repo = repo.strip()
         repos.append(repo)
         if repo in tasks:
             index = i
@@ -27,13 +28,14 @@ with open('repos.txt') as rj:
 
 print(index)
 
-auth_accounts = [
+auth_tokens = [
     """
-    Github accounts for authentication
-    Format:
-        (username,password)
+    Github personal access tokens (Must belong to different accounts)
     """
 ]
+
+with open('github_tokens.cred') as cj:
+    auth_tokens = json.load(cj)
 
 logging.basicConfig(filename='contributors.log',level=logging.CRITICAL,
 format='%(asctime)s %(filename)s %(levelname)s %(threadName)s %(message)s')
@@ -51,14 +53,14 @@ def saving(repo,contributors,tasks):
         json.dump(tasks,cbp)
 
 
-def run(repo,auth_account,proc_cnt):
+def run(repo,auth_token,proc_cnt):
 
     page = 1
     contributors = []
     while True:
         for i in range(5):
             try:
-                r = requests.get('https://api.github.com/repos/'+repo+"/contributors?per_page=100&page="+str(page),auth=auth_account)
+                r = requests.get('https://api.github.com/repos/'+repo+"/contributors?per_page=100&page="+str(page),auth=tuple(auth_token))
                 break
             except Exception as e:
                 # logging.exception(e)
@@ -74,7 +76,7 @@ def run(repo,auth_account,proc_cnt):
             j = json.loads(r.content.decode('utf-8'))
         # print(r.headers['X-RateLimit-Remaining'])
         if int(r.headers['X-RateLimit-Remaining']) <= proc_cnt:
-            logging.critical("RATE LIMIT EXCEEDED ON ACCOUNT:%s!"%(auth_account[0]))
+            logging.critical("RATE LIMIT EXCEEDED ON ACCOUNT:%s!"%(auth_token[0]))
             while time.time() < int(r.headers['X-RateLimit-Reset']):
                 time.sleep(300)
             continue
@@ -83,8 +85,8 @@ def run(repo,auth_account,proc_cnt):
             break
         if page==1 and len(j)<10:
             break
-        if repo != j['full_name']:
-            break
+        # if repo != j['full_name']:
+        #     break
         for contr in j:
             contributors.append({
                 'login':contr['login'],
@@ -99,7 +101,7 @@ def run(repo,auth_account,proc_cnt):
 
 
 
-def consumer(task_queue,tasks,result_queue,auth_account,proc_cnt):
+def consumer(task_queue,tasks,result_queue,auth_token,proc_cnt):
 
     task_cnt = 0
     while True:
@@ -111,7 +113,7 @@ def consumer(task_queue,tasks,result_queue,auth_account,proc_cnt):
             break
         repo = next_task
         logging.warning(next_task)
-        contrs = run(repo,auth_account,proc_cnt)
+        contrs = run(repo,auth_token,proc_cnt)
         task_queue.task_done() # Must be called the same times as .get()
         if contrs:
             result_queue.put([repo,contrs])
@@ -133,11 +135,11 @@ def producer(repos,ind,task_queue,tasks,proc_cnt):
 
 task_queue = queue.Queue(maxsize=10)
 result_queue = queue.Queue(maxsize=10)
-proc_cnt = len(auth_accounts)*2
+proc_cnt = len(auth_tokens)*2
 
 threads = []
 for i in range(proc_cnt):
-    t = threading.Thread(target=consumer,name="Thread#"+str(i+1),args=(task_queue,tasks,result_queue,auth_accounts[i//2],2),daemon=True)
+    t = threading.Thread(target=consumer,name="Thread#"+str(i+1),args=(task_queue,tasks,result_queue,auth_tokens[i//2],2),daemon=True)
     threads.append(t)
     t.start()
 
@@ -150,6 +152,7 @@ while True:
     try: 
         repo,contrs = result_queue.get(timeout=600)
     except:
+        logging.critical("EXITING")
         break
     saving(repo,contrs,tasks)
     result_queue.task_done()

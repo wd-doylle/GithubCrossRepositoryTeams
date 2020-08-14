@@ -22,6 +22,6 @@ with open('repos.txt','w') as rp:
                         if not repo in repos:
                             repos.add(repo)
                             rp.write(repo+'\n')
-            print(y,m,d)
+                print(y,m,d)
 
 

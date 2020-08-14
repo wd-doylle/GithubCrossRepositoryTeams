@@ -7,3 +7,6 @@ issuecomment/
 *.ipynb
 *.bp
 *.gz
+*.cred
+*.log
+fix.py
