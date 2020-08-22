@@ -1,9 +1,9 @@
 import json
-import requests
-import time
 import threading
 import queue
 import logging
+from get_github_api import get_github_api
+
 
 try:
     cbp = open('repo_features.bp')
@@ -48,28 +48,6 @@ logging.basicConfig(filename='repo_features.log',level=logging.WARNING,
 format='%(asctime)s %(filename)s %(levelname)s %(threadName)s %(message)s')
 
 
-def request(url,auth_account):
-    
-    for i in range(5):
-        try:
-            r = requests.get(url,auth=auth_account,headers=headers)
-            break
-        except Exception as e:
-            logging.critical(e)
-            if i == 4:
-                return []
-            time.sleep(10)
-    if not r.content:
-        return []
-    j = json.loads(r.content.decode('utf-8'))
-    if int(r.headers['X-RateLimit-Remaining']) <= proc_cnt:
-        logging.critical("RATE LIMIT EXCEEDED ON ACCOUNT:%s!"%(auth_account[0]))
-        while time.time() < int(r.headers['X-RateLimit-Reset']):
-            time.sleep(300)
-    if 'message' in j:
-        logging.warning(j['message']+'\turl:'+url)
-        return []
-    return j
 
 def saving(repo,features,tasks):
     with open('repo_features.json','a') as cj:
@@ -80,10 +58,9 @@ def saving(repo,features,tasks):
     with open('repo_features.bp','w') as cbp:
         json.dump(tasks,cbp)
 
+def run(repo,auth_token,proc_cnt):
 
-def main(repo,auth_account,proc_cnt):
-
-    j = request('https://api.github.com/repos/'+repo,auth_account)
+    j = get_github_api('https://api.github.com/repos/'+repo,auth_token)
     if not j:
         return {}
     features = {
@@ -92,11 +69,13 @@ def main(repo,auth_account,proc_cnt):
         'forks':j['forks'],
         'subscribers_count':j['subscribers_count'],
     }
-    # j = request('https://api.github.com/repos/'+repo+'languages',auth_account)
-    # features['languages'] = j
-    # j = request('https://api.github.com/repos/'+repo+'topics',auth_account)
-    # features['topics'] = j['names'] if j else []
+    j = get_github_api('https://api.github.com/repos/'+repo+'/languages',auth_token)
+    features['languages'] = j if j else {}
+    j = get_github_api('https://api.github.com/repos/'+repo+'/topics',auth_token,headers)
+    features['topics'] = j['names'] if j else []
+
     return features
+
 
 
 
@@ -112,7 +91,7 @@ def consumer(task_queue,tasks,result_queue,auth_account,proc_cnt):
             break
         repo = next_task
         logging.warning(next_task)
-        features = main(repo,auth_account,proc_cnt)
+        features = run(repo,auth_account,proc_cnt)
         task_queue.task_done() # Must be called the same times as .get()
         result_queue.put([repo,features])
 
@@ -128,11 +107,11 @@ def producer(repos,ind,task_queue,tasks,proc_cnt):
 
 task_queue = queue.Queue(maxsize=10)
 result_queue = queue.Queue(maxsize=10)
-proc_cnt = len(auth_accounts)*2
+proc_cnt = len(auth_tokens)*2
 
 threads = []
 for i in range(proc_cnt):
-    t = threading.Thread(target=consumer,name="Thread#"+str(i+1),args=(task_queue,tasks,result_queue,auth_accounts[i//2],2),daemon=True)
+    t = threading.Thread(target=consumer,name="Thread#"+str(i+1),args=(task_queue,tasks,result_queue,auth_tokens[i//2],2),daemon=True)
     threads.append(t)
     t.start()
 

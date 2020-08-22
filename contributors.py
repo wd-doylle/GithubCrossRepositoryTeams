@@ -1,9 +1,8 @@
 import json
-import requests
-import time
 import threading
 import queue
 import logging
+from get_github_api import get_github_api
 
 try:
     cbp = open('contributors.bp')
@@ -53,39 +52,17 @@ def saving(repo,contributors,tasks):
         json.dump(tasks,cbp)
 
 
+
 def run(repo,auth_token,proc_cnt):
 
     page = 1
     contributors = []
     while True:
-        for i in range(5):
-            try:
-                r = requests.get('https://api.github.com/repos/'+repo+"/contributors?per_page=100&page="+str(page),auth=tuple(auth_token))
-                if not 'X-RateLimit-Remaining' in r.headers:
-                    logging.critical(r.content)
-                else:
-                    break
-            except Exception as e:
-                logging.critical(e)
-                if i == 4:
-                    return contributors
-                time.sleep(10)
-        if int(r.headers['X-RateLimit-Remaining']) <= 2:
-            logging.critical("RATE LIMIT EXCEEDED ON ACCOUNT:%s!"%(auth_token[0]))
-            while time.time() < int(r.headers['X-RateLimit-Reset']):
-                time.sleep(300)
-            continue
-        if not r.content:
-            j = []
-        else:
-            j = json.loads(r.content.decode('utf-8'))
-        if 'message' in j:
-            logging.warning(j['message']+'\turl:https://api.github.com/repos/'+repo+"/contributors?per_page=100&page="+str(page))
+        j = get_github_api('https://api.github.com/repos/'+repo+"/contributors?per_page=100&page="+str(page),auth_token)
+        if not j:
             break
         if page==1 and len(j)<10:
             break
-        # if repo != j['full_name']:
-        #     break
         for contr in j:
             contributors.append({
                 'login':contr['login'],
