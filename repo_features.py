@@ -44,7 +44,7 @@ headers = {
 }
 
 
-logging.basicConfig(filename='repo_features.log',level=logging.WARNING,
+logging.basicConfig(filename='repo_features.log',level=logging.CRITICAL,
 format='%(asctime)s %(filename)s %(levelname)s %(threadName)s %(message)s')
 
 
@@ -82,6 +82,7 @@ def run(repo,auth_token,proc_cnt):
 
 def consumer(task_queue,tasks,result_queue,auth_account,proc_cnt):
 
+    task_cnt = 0
     while True:
         next_task = task_queue.get()
         if next_task is None:
@@ -94,6 +95,9 @@ def consumer(task_queue,tasks,result_queue,auth_account,proc_cnt):
         features = run(repo,auth_account,proc_cnt)
         task_queue.task_done() # Must be called the same times as .get()
         result_queue.put([repo,features])
+        task_cnt += 1
+        if task_cnt%1000 == 1:
+            logging.critical("ALIVE")
 
 
 def producer(repos,ind,task_queue,tasks,proc_cnt):

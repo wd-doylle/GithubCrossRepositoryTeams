@@ -31,6 +31,6 @@ def get_github_api(url,auth_token,headers=None):
     else:
         j = json.loads(r.content.decode('utf-8'))
     if 'message' in j:
-        logging.warning(j['message']+'\turl:'+url)
+        logging.critical(j['message']+'\turl:'+url)
         return None
     return j
