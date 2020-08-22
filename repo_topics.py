@@ -30,13 +30,14 @@ with open('contributors.json') as rj:
 print(len(repos))
 print(index)
 
-auth_accounts = [
+auth_tokens = [
     """
-    Github accounts for authentication
-    Format:
-        (username,password)
+    Github personal access tokens (Must belong to different accounts)
     """
 ]
+
+with open('github_tokens.cred') as cj:
+    auth_tokens = json.load(cj)
 
 logging.basicConfig(filename='repo_topics.log',level=logging.WARNING,
 format='%(asctime)s %(filename)s %(levelname)s %(threadName)s %(message)s')
