@@ -71,6 +71,9 @@ def run(repo,auth_token,proc_cnt):
     }
     j = get_github_api('https://api.github.com/repos/'+repo+'/languages',auth_token)
     features['languages'] = j if j else {}
+    if not features['languages']:
+        return {}
+
     j = get_github_api('https://api.github.com/repos/'+repo+'/topics',auth_token,headers)
     features['topics'] = j['names'] if j else []
 
@@ -92,8 +95,10 @@ def consumer(task_queue,tasks,result_queue,auth_account,proc_cnt):
             break
         repo = next_task
         logging.warning(next_task)
-        features = run(repo,auth_account,proc_cnt)
+        features = run(repo,auth_account,proc_cnt)            
         task_queue.task_done() # Must be called the same times as .get()
+        if not features:
+            continue
         result_queue.put([repo,features])
         task_cnt += 1
         if task_cnt%1000 == 1:
@@ -126,7 +131,7 @@ t.start()
 
 while True:
     try:
-        repo,features = result_queue.get(timeout=60)
+        repo,features = result_queue.get(timeout=3600)
     except:
         break
     saving(repo,features,tasks)

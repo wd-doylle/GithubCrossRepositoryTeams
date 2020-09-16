@@ -1,50 +1,46 @@
 import json
 import sys
 import os
+import gzip
+
 
 network_filename = sys.argv[1]
 time_filename = sys.argv[2]
 
-bp = [0,0,0]
 nodes = []
 aware = []
 duration = []
 
-user_ids = {}
 user_logins = set()
 with open("users.json") as uj:
     for u in uj.readlines():
         j = json.loads(u)
-        user_ids[j['id']] = j['login']
         user_logins.add(j['login'])
 
 node_indicies = {}
 
 print("Computing PR Comments...")
-year = bp[0]
-month = bp[1]
-day = bp[2]
 years = os.listdir('issuecomment')
-months = os.listdir('issuecomment/'+years[year])
-days = os.listdir('issuecomment/'+years[year]+'/'+months[month])
+months = os.listdir('issuecomment/'+years[0])
+days = os.listdir('issuecomment/'+years[0]+'/'+months[0])
 issue_partis = {}
-for y in range(year,len(years)):
+for y in range(len(years)):
     months = os.listdir('issuecomment/'+years[y])
-    for m in range(month,len(months)):
+    for m in range(len(months)):
         days = os.listdir('issuecomment/'+years[y]+'/'+months[m])
-        for d in range(day,len(days)):
-            with open('issuecomment/'+years[y]+'/'+months[m]+'/'+days[d]) as ic:
+        for d in range(len(days)):
+            with gzip.open('issuecomment/'+years[y]+'/'+months[m]+'/'+days[d],'rt') as ic:
                 for line in ic.readlines():
                     j = json.loads(line)
                     if not 'body' in j or not j['body']:
                         continue
-                    if not j['actor_id'] in user_ids:
+                    if not j['actor_login'] in user_logins:
                         continue
                     if not j['issue_id'] in issue_partis:
-                        issue_partis[j['issue_id']] = [j['actor_id']]
+                        issue_partis[j['issue_id']] = [j['actor_login']]
                     else:
-                        issue_partis[j['issue_id']].append(j['actor_id'])
-                    atter = user_ids[j['actor_id']]
+                        issue_partis[j['issue_id']].append(j['actor_login'])
+                    atter = j['actor_login']
                     repo = j['repo_name']
                     time = j['created_at']
                     for word in j['body'].split():
@@ -82,8 +78,6 @@ for y in range(year,len(years)):
                             else:
                                 duration[u1][u2] = [time,time]
             print(y,m,d)
-        day = 0
-    month = 0
 
 print("Outputting...")
 network = {

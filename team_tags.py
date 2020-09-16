@@ -9,13 +9,11 @@ link_filename = sys.argv[1]
 team_filename = sys.argv[2]
 link_single_filename = sys.argv[3]
 team_single_filename = sys.argv[4]
-topic_filename = sys.argv[5]
-language_filename = sys.argv[6]
-feature_filename = sys.argv[7]
-time_filename = sys.argv[8]
-contribution_filename = sys.argv[9]
-repo_time_filename = sys.argv[10]
-output_filename = sys.argv[11]
+feature_filename = sys.argv[5]
+time_filename = sys.argv[6]
+contribution_filename = sys.argv[7]
+repo_time_filename = sys.argv[8]
+output_filename = sys.argv[9]
 
 
 print("Loading Links...")
@@ -37,42 +35,34 @@ with open(link_single_filename) as lkj:
 		else:
 			links_single[dep] = {ter:json.loads(repos)}
 
-print("Loading Topics...")
-repo_topics = {}
-topic_repos = {}
-with open(topic_filename) as tf:
-	for line in tf.readlines():
-		repo,labels = line.split('\t')
-		labels = json.loads(labels)
-		for t in labels:
-			if not t in topic_repos:
-				topic_repos[t] = 0
-			topic_repos[t] += 1
-		repo_topics[repo] = labels
 
-print("Loading Languages...")
-repo_languages = {}
-lang_repos = {}
-with open(language_filename) as lf:
-	for line in lf.readlines():
-		repo,langs = line.split('\t')
-		langs = sorted(json.loads(langs).items(),key=lambda x:x[1],reverse=True)[:2]
-		langs = [l[0] for l in langs]
-		for t in langs:
-			if not t in lang_repos:
-				lang_repos[t] = 0
-			lang_repos[t] += 1
-		repo_languages[repo] = langs
 
 print("Loading repo features...")
 repo_features = {}
 repo_feature_total = []
 feature_repo_cnt = [{},{},{},{}]
 repo_team_cnt = {}
+repo_languages = {}
+lang_repos = {}
+repo_topics = {}
+topic_repos = {}
 with open(feature_filename) as ff:
 	for line in ff.readlines():
 		repo,feats = line.split('\t')
 		repo_features[repo] = json.loads(feats)
+		langs = sorted(repo_features[repo]['languages'].items(),key=lambda x:x[1],reverse=True)[:2]
+		langs = [l[0] for l in langs]
+		for t in langs:
+			if not t in lang_repos:
+				lang_repos[t] = 0
+			lang_repos[t] += 1
+		repo_languages[repo] = langs
+		topics = repo_features[repo]['topics']
+		for t in topics:
+			if not t in topic_repos:
+				topic_repos[t] = 0
+			topic_repos[t] += 1
+		repo_topics[repo] = topics
 		repo_features[repo] = [repo_features[repo]['size'],repo_features[repo]['watchers'],repo_features[repo]['forks'],repo_features[repo]['subscribers_count']]
 		if not repo_features[repo][0] in feature_repo_cnt[0]:
 			feature_repo_cnt[0][repo_features[repo][0]] = 0
@@ -507,4 +497,3 @@ with open(output_filename.rpartition('/')[0]+"/repo_feature_statistics.txt",'w')
 	rj.write('%s\n'%json.dumps(team_cnt_test_A))
 	rj.write('%s\n'%json.dumps(team_member_test_A))
 	rj.write('%s\n'%json.dumps(contr_test_B))
-	# rj.write('%s\n'%json.dumps(team_cnt_test_B))

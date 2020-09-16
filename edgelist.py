@@ -3,7 +3,7 @@ import sys
 
 network_filename = sys.argv[1]
 output_filename = sys.argv[2]
-
+output_filename_single = sys.argv[3]
 
 print("Reading Aware......")
 
@@ -67,11 +67,16 @@ with open('contributors.json') as cj:
 print("Outputting......")
 with open(output_filename,'w') as od:
     with open(output_filename.rpartition('.')[0]+'.link','w') as ol:
-        for i in range(len(contrs)):
-            for j in range(len(contrs[i][0])):
-                repos = set()
-                for r in contr_repos[i][j]:
-                    repos.add(r.split('/')[-1])
-                if len(repos) > 1:
-                    od.write('%d\t%d\t%f\n'%(i,contrs[i][0][j],1))
-                    ol.write('%s\t%s\t%s\n'%(nodes[i],nodes[contrs[i][0][j]],json.dumps(contr_repos[i][j])))
+        with open(output_filename_single,'w') as ods:
+            with open(output_filename_single.rpartition('.')[0]+'.link','w') as ols:
+                for i in range(len(contrs)):
+                    for j in range(len(contrs[i][0])):
+                        if len(contr_repos[i][j]) > 0:
+                            ods.write('%d\t%d\t%f\n'%(i,contrs[i][0][j],1))
+                            ols.write('%s\t%s\t%s\n'%(nodes[i],nodes[contrs[i][0][j]],json.dumps(contr_repos[i][j])))
+                        repos = set()
+                        for r in contr_repos[i][j]:
+                            repos.add(r.split('/')[-1])
+                        if len(repos) > 1:
+                            od.write('%d\t%d\t%f\n'%(i,contrs[i][0][j],1))
+                            ol.write('%s\t%s\t%s\n'%(nodes[i],nodes[contrs[i][0][j]],json.dumps(contr_repos[i][j])))

@@ -1,64 +1,48 @@
 import json
 import sys
 import os
+import gzip
 
 repos_filename = sys.argv[1]
 output_filename = sys.argv[2]
 
-bp = [0,0,0]
 
 repos = set()
+with open('repos.txt') as rj:
+    for i,repo in enumerate(rj.readlines()):
+        repo = repo.strip()
+        repos.add(repo)
+    print(len(repos))
 
-print("Reading repos...")
-with open(repos_filename) as rf:
-    rj = json.load(rf)
-    for repo in rj:
-        repos.add(repo['full_name'])
-
-issue_comment_dir = "../GithubGroupDetection/issuecomment/"
+root_dir = "issuecomment/"
 
 print("Computing PR Comments...")
-year = bp[0]
-month = bp[1]
-day = bp[2]
-years = os.listdir(issue_comment_dir)
-months = os.listdir(issue_comment_dir+years[year])
-days = os.listdir(issue_comment_dir+years[year]+'/'+months[month])
-
-
 repo_time = {}
-
-for y in range(year,len(years)):
-    months = os.listdir(issue_comment_dir+years[y])
-    for m in range(month,len(months)):
-        days = os.listdir(issue_comment_dir+years[y]+'/'+months[m])
-        for d in range(day,len(days)):
-            with open(issue_comment_dir+years[y]+'/'+months[m]+'/'+days[d]) as ic:
-                for line in ic.readlines():
-                    j = json.loads(line)
-                    repo = j['repo_name']
-                    time = j['created_at']
-                    if time == 'None' or not time:
-                        continue
-                    if repo in repos:
-                        if not repo in repo_time:
-                            repo_time[repo] = [time,time]
-                        else:
-                            if time < repo_time[repo][0]:
-                                repo_time[repo][0] = time
-                            elif time > repo_time[repo][1]:
-                                repo_time[repo][1] = time
-                    if not repo:
-                        break
-            print(y,m,d)
-            if not repo:
-                break
-        day = 0
-        if not repo:
-            break
-    month = 0
-    if not repo:
-        break
+with open('repos.txt','w') as rp:
+    for y in [2015,2016,2017,2018,2019,2020]:
+        year_dir = os.path.join(root_dir,str(y))
+        for m in range(1,13):
+            month_dir = os.path.join(year_dir,'%d-%02d'%(y,m))
+            for d in range(1,32):
+                file_path = os.path.join(month_dir,"%d-%02d-%02d.json.gz"%(y,m,d))
+                if not os.path.exists(file_path):
+                    continue
+                with gzip.open(file_path,'rt') as f:
+                    for line in f.readlines():
+                        j = json.loads(line)
+                        repo = j['repo_name']
+                        time = j['created_at']
+                        if time == 'None' or not time:
+                            continue
+                        if repo in repos:
+                            if not repo in repo_time:
+                                repo_time[repo] = [time,time]
+                            else:
+                                if time < repo_time[repo][0]:
+                                    repo_time[repo][0] = time
+                                elif time > repo_time[repo][1]:
+                                    repo_time[repo][1] = time
+                print(y,m,d)
 
 print("Outputting...")
 with open(output_filename,'w') as of:

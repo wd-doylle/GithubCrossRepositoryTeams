@@ -56,30 +56,30 @@ File structure of this project:
 Workflow:
 1. All public IssueCommentEvents from 01/01/2015 to 06/30/2018 stored under \issuecomment\ directory
 2. Extract all the active repos during the above period by running:
-	python3 repos.py
+	python repos.py
 3. Get all the contributors of these repos through Github API by running:
-	python3 contributors.py
+	python contributors.py
 4. Get the user list by running:
-	python3 users.py
+	python users.py
 5. Get all repo languages, topics, and numeric features through Github API by running:
-	python3 repo_language.py
-	python3 repo_topics.py
-	python3 repo_features.py
+	python repo_features.py
 6. Generate the developer network by running:
-	python3 network.py OSLOM\network.json OSLOM\network_time.dat
+	python network.py OSLOM\network.json OSLOM\network_time.dat
 7. Generate the edge lists by running:
-	python3 edgelist.py OSLOM\network.json OSLOM\Edges.dat
-	python3 edgelist_single.py OSLOM\network_single.json OSLOM\Edges_single.dat
+	python edgelist.py OSLOM\network.json OSLOM\Edges.dat OSLOM\Edges_single.dat
 8. Run OSLOM2(www.oslom.org) on the edge lists.
+	./oslom_undir -f Edges.dat -uw -hr 0 -singlet -louvain 1 -t 0.99 -cp 0.01
 9. Extract the team lists:
-	python3 teams.py OSLOM\Edges.dat_oslo_files\tp OSLOM\network.json OSLOM\teams.txt
-	python3 teams.py OSLOM\Edges_single.dat_oslo_files\tp OSLOM\network_single.json OSLOM\teams_single.txt
-10.Compute properties of each team:
-	python3 team_tags.py OSLOM\Edges.link OSLOM\teams.txt OSLOM\Edges_single.link OSLOM\teams_single.txt repo_topics.json repo_language.json repo_features.json OSLOM\network_time.dat contributors.json OSLOM\team_tags.txt
-11.Compute team level statistics and generate charts:
-	python3 team_statistics.py OSLOM\team_tags.txt
-12.Compute repo level statistics and generate charts:
-	python3 repo_statistics.py OSLOM\repo_statistics.txt
+	python teams.py OSLOM\Edges.dat_oslo_files\tp OSLOM\network.json OSLOM\teams.txt
+	python teams.py OSLOM\Edges_single.dat_oslo_files\tp OSLOM\network.json OSLOM\teams_single.txt
+10. Compute lifetime for repos:
+	python repo_time.py repos.txt repo_time.txt
+11.Compute properties of each team:
+	python team_tags.py OSLOM\Edges.link OSLOM\teams.txt OSLOM\Edges_single.link OSLOM\teams_single.txt repo_features.json OSLOM\network_time.dat contributors.json repo_time.txt OSLOM\team_tags.txt
+12.Compute team level statistics and generate charts:
+	python team_statistics.py OSLOM\team_tags.txt
+13.Compute repo level statistics and generate charts:
+	python repo_statistics.py OSLOM\repo_statistics.txt
 14.Generate the visualization of top 100 largest teams:
-	python3 pajek_repaint.py OSLOM\Edges.dat_oslo_files\pajek_file_0.net
+	python pajek_repaint.py OSLOM\Edges.dat_oslo_files\pajek_file_0.net
 15.Open pajek_file_0_new_without_singleton.net in gephi(www.gephi.org)
