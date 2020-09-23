@@ -4,10 +4,10 @@ OSLOM/
 *.json
 issuecomment/
 *.txt
-*.ipynb
 *.bp
 *.gz
 *.cred
 *.log
 fix.py
 charts/
+.ipynb_checkpoints/

@@ -81,16 +81,17 @@ with open(feature_filename) as ff:
 		repo_team_cnt[repo] = 0
 repo_feature_total = np.array(repo_feature_total)
 VI = np.linalg.inv(np.cov(repo_feature_total.T))
-print(VI)
+# print(VI)
 VAR = repo_feature_total.var(0)
-print(VAR)
+# print(VAR)
 DIS = 0
 MEAN = repo_feature_total.mean(0)
-print(MEAN)
+# print(MEAN)
 for rf in repo_feature_total:
 	DIS += scipy.spatial.distance.mahalanobis(rf,MEAN,VI)/len(repo_feature_total)
-print(DIS)
-
+# print(DIS)
+print(repo_feature_total.max(0))
+print(repo_feature_total.min(0))
 
 print("Loading repo time...")
 repo_time = {}
@@ -103,7 +104,7 @@ with open(repo_time_filename) as tf:
 print("Loading contribution...")
 repo_ind = {}
 contributions = []
-total_contrs = []
+repo_total_contrs = []
 with open(contribution_filename) as cf:
 	i = 0
 	for line in cf.readlines():
@@ -116,7 +117,7 @@ with open(contribution_filename) as cf:
 			contrs[cntr['login']] = cntr['contributions']
 			total_contr += cntr['contributions']
 		contributions.append(contrs)
-		total_contrs.append(total_contr)
+		repo_total_contrs.append(total_contr)
 		i += 1
 
 print("Computing Labels & Contributions...")
@@ -200,13 +201,15 @@ with open(team_filename) as tmj:
 		forks = forks_new
 		subscribers = subscribers_new
 		contribution = 0
+		repo_contribution = 0
 		total_contribution = 0
 		for repo in contrs:
 			_contribution = 0
 			for mem in contrs[repo]:
 				_contribution += contributions[repo_ind[repo]][mem]/len(contrs[repo])
-			total_contribution += total_contrs[repo_ind[repo]]/len(contributions[repo_ind[repo]])
-			contr_rate[repo] = _contribution/(total_contrs[repo_ind[repo]]/len(contributions[repo_ind[repo]]))
+				total_contribution += contributions[repo_ind[repo]][mem]
+			repo_contribution += repo_total_contrs[repo_ind[repo]]/len(contributions[repo_ind[repo]])
+			contr_rate[repo] = _contribution/(repo_total_contrs[repo_ind[repo]]/len(contributions[repo_ind[repo]]))
 			contribution += _contribution
 			if not repo in repo_team_members:
 				repo_team_members[repo] = set()
@@ -250,8 +253,8 @@ with open(team_filename) as tmj:
 		feature_mean = np.mean([repo_features[r] for r in repos],0)
 		teams.append(tm)
 		team_repos.append(repos)
-		contr_rate['all'] = contribution/total_contribution
-		contr_rate['avg_value'] = contribution/len(repos)
+		contr_rate['all'] = contribution/repo_contribution
+		contr_rate['avg_value'] = total_contribution/len(tm)
 		contr_rates.append(contr_rate)
 		team_language_diff.append(lang_sim)
 		team_topic_diff.append(topic_sim)
@@ -312,7 +315,7 @@ with open(team_single_filename) as tmj:
 			_contribution = 0
 			for mem in contrs[repo]:
 				_contribution += contributions[repo_ind[repo]][mem]/len(contrs[repo])
-			contr_rate = _contribution/(total_contrs[repo_ind[repo]]/len(contributions[repo_ind[repo]]))
+			contr_rate = _contribution/(repo_total_contrs[repo_ind[repo]]/len(contributions[repo_ind[repo]]))
 			if not repo in repo_team_cnt_single:
 				repo_team_cnt_single[repo] = 0
 			repo_team_cnt_single[repo] += 1
@@ -370,7 +373,8 @@ for i in range(len(teams)):
 		cens[repo] = (max(cns)*len(G_r[repo])-sum(cns))/(len(G_r[repo])-2) if len(G_r[repo])>2 else 0
 		sizes[repo] = len(G_r[repo].nodes)
 	if not nx.is_connected(G):
-		print(tm)
+		# print(tm)
+		pass
 		# continue
 	degree_cen = nx.degree_centrality(G).items()
 	degree_cen = sorted(degree_cen, key=lambda x:x[1])
@@ -477,7 +481,7 @@ with open(output_filename,'w') as lj:
 with open(os.path.join(os.path.dirname(output_filename),'repo_statistics.txt'),'w') as rj:
 	i = 0
 	for repo in repo_team_members:
-		rj.write("%s\t%d\t%d\t"%(repo,repo_team_cnt[repo],total_contrs[repo_ind[repo]]))
+		rj.write("%s\t%d\t%d\t"%(repo,repo_team_cnt[repo],repo_total_contrs[repo_ind[repo]]))
 		json.dump(repo_contrs_by_teams[i],rj)
 		rj.write('\t%d\t'%len(contributions[repo_ind[repo]]))
 		json.dump(repo_ratio_of_teams[i],rj)
