@@ -4,6 +4,7 @@ import datetime
 import networkx as nx
 import numpy as np
 import scipy
+import os
 
 link_filename = sys.argv[1]
 team_filename = sys.argv[2]
@@ -160,13 +161,9 @@ with open(team_filename) as tmj:
 							contrs[repo].add(member)
 						if ter in contributions[repo_ind[repo]]:
 							contrs[repo].add(ter)
-						if repo in repo_topics:
-							topics[repo] = repo_topics[repo]
-						else:
-							topics[repo] = []
-						if repo in repo_languages:
-							languages[repo] = repo_languages[repo]
 						if repo in repo_features:
+							topics[repo] = repo_topics[repo]
+							languages[repo] = repo_languages[repo]
 							size[repo] = repo_features[repo][0]
 							watchers[repo] = repo_features[repo][1]
 							forks[repo] = repo_features[repo][2]
@@ -238,9 +235,9 @@ with open(team_filename) as tmj:
 		else:
 			lang_sim = -1
 		for repo in repos:
-			if not repo in repo_time or not repo in repo_languages:
+			if not repo in repo_time:
 				continue
-			if not repo in repo_topics:
+			if not repo_topics[repo]:
 				topic_rs = [0]
 			else:
 				topic_rs = [topic_repos[t] for t in repo_topics[repo]]
@@ -254,6 +251,7 @@ with open(team_filename) as tmj:
 		teams.append(tm)
 		team_repos.append(repos)
 		contr_rate['all'] = contribution/total_contribution
+		contr_rate['avg_value'] = contribution/len(repos)
 		contr_rates.append(contr_rate)
 		team_language_diff.append(lang_sim)
 		team_topic_diff.append(topic_sim)
@@ -265,18 +263,18 @@ with open(team_filename) as tmj:
 		team_reposubscribers_var.append(np.var(subscribers)/VAR[3])
 		team_repofeature_dis.append(np.mean([scipy.spatial.distance.mahalanobis(repo_features[r],feature_mean,VI) for r in repos])/DIS)
 for repo in repo_team_cnt:
-	if not repo in repo_time or not repo in repo_languages or not repo in repo_ind:
+	if not repo in repo_time or not repo in repo_ind:
 		continue
-	if not repo in repo_topics:
+	if not repo_topics[repo]:
 		topic_rs = [0]
 	else:
 		topic_rs = [topic_repos[t] for t in repo_topics[repo]]
 	lang_rs = [lang_repos[t] for t in repo_languages[repo]]
 	team_cnt_test_A.append([repo_features[repo][0],repo_features[repo][2],len(contributions[repo_ind[repo]]),repo_time[repo],max(topic_rs),max(lang_rs),np.mean(topic_rs),np.mean(lang_rs),repo_team_cnt[repo]])
 for repo in repo_team_members:
-	if not repo in repo_time or not repo in repo_languages:
+	if not repo in repo_time:
 		continue
-	if not repo in repo_topics:
+	if not repo_topics[repo]:
 		topic_rs = [0]
 	else:
 		topic_rs = [topic_repos[t] for t in repo_topics[repo]]
@@ -318,9 +316,9 @@ with open(team_single_filename) as tmj:
 			if not repo in repo_team_cnt_single:
 				repo_team_cnt_single[repo] = 0
 			repo_team_cnt_single[repo] += 1
-			if not repo in repo_features or not repo in repo_time or not repo in repo_languages:
+			if not repo in repo_time or not repo in repo_features:
 				continue
-			if not repo in repo_topics:
+			if not repo_topics[repo]:
 				topic_rs = [0]
 			else:
 				topic_rs = [topic_repos[t] for t in repo_topics[repo]]
@@ -476,8 +474,7 @@ with open(output_filename,'w') as lj:
 		lj.write('\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n'%(team_language_diff[i],team_topic_diff[i],team_reposize_var[i],team_repowatchers_var[i],team_repoforks_var[i],team_reposubscribers_var[i]
 									,team_repofeature_dis[i]))
 
-
-with open(output_filename.rpartition('/')[0]+"/repo_statistics.txt",'w') as rj:
+with open(os.path.join(os.path.dirname(output_filename),'repo_statistics.txt'),'w') as rj:
 	i = 0
 	for repo in repo_team_members:
 		rj.write("%s\t%d\t%d\t"%(repo,repo_team_cnt[repo],total_contrs[repo_ind[repo]]))
@@ -492,7 +489,7 @@ with open(output_filename.rpartition('/')[0]+"/repo_statistics.txt",'w') as rj:
 		i += 1
 
 
-with open(output_filename.rpartition('/')[0]+"/repo_feature_statistics.txt",'w') as rj:
+with open(os.path.join(os.path.dirname(output_filename),'repo_feature_statistics.txt'),'w') as rj:
 	rj.write('%s\n'%json.dumps(contr_test_A))
 	rj.write('%s\n'%json.dumps(team_cnt_test_A))
 	rj.write('%s\n'%json.dumps(team_member_test_A))

@@ -1,5 +1,6 @@
 import json
 import sys
+import os
 import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,33 +8,28 @@ from matplotlib import rcParams
 
 
 team_tag_filename = sys.argv[1]
-topic_filename = sys.argv[2]
-language_filename = sys.argv[3]
+feature_filename = sys.argv[2]
 
-print("Loading Topics...")
+print("Loading Languages & Topics...")
 topic_repos = {}
-with open(topic_filename) as tf:
+lang_repos = {}
+with open(feature_filename) as tf:
     for line in tf.readlines():
-        repo,labels = line.split('\t')
-        labels = json.loads(labels)
-        for t in labels:
+        repo,feats = line.split('\t')
+        feats = json.loads(feats)
+        topics = feats['topics']
+        for t in topics:
             if not t in topic_repos:
                 topic_repos[t] = 0
             topic_repos[t] += 1
-
-print("Loading Languages...")
-lang_repos = {}
-with open(language_filename) as tf:
-    for line in tf.readlines():
-        repo,langs = line.split('\t')
-        langs = sorted(json.loads(langs).items(),key=lambda x:x[1],reverse=True)[:2]
+        
+        langs = sorted(feats['languages'].items(),key=lambda x:x[1],reverse=True)[:2]
         langs = [l[0] for l in langs]
         for t in langs:
-            # if t == 'WebAssembly':
-                # print(repo)
             if not t in lang_repos:
                 lang_repos[t] = 0
             lang_repos[t] += 1
+
 
 blue = "#3333FF"
 red = "#FF3333"
@@ -43,8 +39,11 @@ rcParams['axes.labelsize'] = 24
 rcParams['ytick.labelsize'] = 24
 rcParams['xtick.labelsize'] = 24
 rcParams['axes.titlesize'] = 24
+# rcParams["figure.edgecolor"] = 'black'
 
-save_dir = 'c:\\Users\\doylle\\Desktop\\charts\\'
+save_dir = 'charts/'
+if not os.path.exists(save_dir):
+    os.mkdir(save_dir)
 
 print("Computing statistics...")
 team_sizes = []
@@ -207,8 +206,8 @@ lang_ratio_list = sorted(lang_ratio.items(),key=lambda x:x[1],reverse=True)
 print("Plotting...")
 fig, ax = plt.subplots()
 ax.hist(team_sizes,range=(2,100),bins=98,color=blue)
-ax.set_xlim(left=2,right=100)
-ax.set_xticks(list(range(2,100,10)))
+ax.set_xlim(left=0,right=60)
+ax.set_xticks(list(range(2,60,10)))
 # ax.set_xlabel("Team Size")
 ax.set_ylabel("# of Teams")
 fig.savefig(save_dir+'TeamSize.pdf',bbox_inches='tight')
@@ -225,6 +224,7 @@ plt.close(fig)
 fig, ax = plt.subplots()
 ax.hist(team_size_over_repo_size,range=(0,1),bins=50,color=blue)
 # ax.set_xlim(left=0)
+ax.set_xticks([x/10 for x in range(0,11,2)])
 ax.set_ylabel("# of Teams")
 fig.savefig(save_dir+'TeamSizeOverRepoSize.pdf',bbox_inches='tight')
 plt.close(fig)
@@ -254,47 +254,47 @@ fig.savefig(save_dir+'TeamLanguages.pdf',bbox_inches='tight')
 plt.close(fig)
 
 
-tops = 10
-fig, ax = plt.subplots()
-ax.bar(range(tops),[lb[1] for lb in topic_ratio_list[:tops]],color=blue)
-ax.set_xticks([x+0.5 for x in range(tops)])
-ax.set_xticklabels([lb[0] for lb in topic_ratio_list[:tops]],fontsize=20)
-# ax.set_xlabel("Team Topics(Top %d)"%tops)
-ax.set_ylabel("Average # of Teams in Repository",fontsize=20)
-# ax.set_yscale("log")
-fig.autofmt_xdate()
-fig.savefig(save_dir+'TeamRatioTopics.pdf',bbox_inches='tight')
-plt.close(fig)
-# for topic in [t[0] for t in topic_ratio][:tops]:
-#     print(topic_repos[topic])
-_topic_ratio = [t[1] for t in topic_ratio_list]
-print(np.max(_topic_ratio),np.min(_topic_ratio),np.std(_topic_ratio),np.mean(_topic_ratio))
+# tops = 10
+# fig, ax = plt.subplots()
+# ax.bar(range(tops),[lb[1] for lb in topic_ratio_list[:tops]],color=blue)
+# ax.set_xticks([x+0.5 for x in range(tops)])
+# ax.set_xticklabels([lb[0] for lb in topic_ratio_list[:tops]],fontsize=20)
+# # ax.set_xlabel("Team Topics(Top %d)"%tops)
+# ax.set_ylabel("Average # of Teams in Repository",fontsize=20)
+# # ax.set_yscale("log")
+# fig.autofmt_xdate()
+# fig.savefig(save_dir+'TeamRatioTopics.pdf',bbox_inches='tight')
+# plt.close(fig)
+# # for topic in [t[0] for t in topic_ratio][:tops]:
+# #     print(topic_repos[topic])
+# _topic_ratio = [t[1] for t in topic_ratio_list]
+# print(np.max(_topic_ratio),np.min(_topic_ratio),np.std(_topic_ratio),np.mean(_topic_ratio))
 
-langs = 10
-fig, ax = plt.subplots()
-ax.bar(range(langs),[lb[1] for lb in lang_ratio_list[:langs]],color=blue)
-ax.set_xticks([x+0.5 for x in range(langs)])
-ax.set_xticklabels([lb[0] for lb in lang_ratio_list[:langs]],fontsize=20)
-# ax.set_xlabel("Team Languages(Top %d)"%langs)
-ax.set_ylabel("Average # of Teams in Repository",fontsize=20)
-# ax.set_yscale("log")
-fig.autofmt_xdate()
-fig.savefig(save_dir+'TeamRatioLanguages.pdf',bbox_inches='tight')
-plt.close(fig)
-# for lang in [t[0] for t in lang_ratio[:langs]]:
-#     print(lang_repos[lang])
-_lang_ratio = [t[1] for t in lang_ratio_list]
-print(np.max(_lang_ratio),np.min(_lang_ratio),np.std(_lang_ratio),np.mean(_lang_ratio))
+# langs = 10
+# fig, ax = plt.subplots()
+# ax.bar(range(langs),[lb[1] for lb in lang_ratio_list[:langs]],color=blue)
+# ax.set_xticks([x+0.5 for x in range(langs)])
+# ax.set_xticklabels([lb[0] for lb in lang_ratio_list[:langs]],fontsize=20)
+# # ax.set_xlabel("Team Languages(Top %d)"%langs)
+# ax.set_ylabel("Average # of Teams in Repository",fontsize=20)
+# # ax.set_yscale("log")
+# fig.autofmt_xdate()
+# fig.savefig(save_dir+'TeamRatioLanguages.pdf',bbox_inches='tight')
+# plt.close(fig)
+# # for lang in [t[0] for t in lang_ratio[:langs]]:
+# #     print(lang_repos[lang])
+# _lang_ratio = [t[1] for t in lang_ratio_list]
+# print(np.max(_lang_ratio),np.min(_lang_ratio),np.std(_lang_ratio),np.mean(_lang_ratio))
 
 
-fig, ax = plt.subplots()
-ax.bar(team_size_vs_lifetime.keys(),[np.mean(s) for s in team_size_vs_lifetime.values()],color=blue)
-# ax.set_xlabel("Team Size")
-ax.set_ylabel("Average Team Lifetime (days)")
-ax.set_xlim((0,60))
-# ax.set_yscale("log")
-fig.savefig(save_dir+'TeamSizeVsLifetime.pdf',bbox_inches='tight')
-plt.close(fig)
+# fig, ax = plt.subplots()
+# ax.bar(team_size_vs_lifetime.keys(),[np.mean(s) for s in team_size_vs_lifetime.values()],color=blue)
+# # ax.set_xlabel("Team Size")
+# ax.set_ylabel("Average Team Lifetime (days)")
+# ax.set_xlim((0,60))
+# # ax.set_yscale("log")
+# fig.savefig(save_dir+'TeamSizeVsLifetime.pdf',bbox_inches='tight')
+# plt.close(fig)
 
 
 fig, ax = plt.subplots()
@@ -302,75 +302,75 @@ ax.bar(team_size_vs_repo_size.keys(),[np.mean(s) for s in team_size_vs_repo_size
 # ax.set_xticks([x+0.5 for x in range(tops)])
 # ax.set_xticklabels([lb[0] for lb in team_topics[:tops]])
 # ax.set_xlabel("Team Size")
-ax.set_ylabel("Average # of Contributors in the Repo")
+ax.set_ylabel("Average # of Contributors\n in the Repo")
 ax.set_xlim((0,60))
 # ax.set_yscale("log")
 fig.savefig(save_dir+'TeamSizeVsRepoSize.pdf',bbox_inches='tight')
 plt.close(fig)
 
 
-fig, ax = plt.subplots()
-ax.scatter(list(team_average_shortest_path_length_repos_unfold.keys()),[np.mean(s) for s in team_average_shortest_path_length_repos_unfold.values()],color=blue)
-ax.set_ylabel("Team Contribution Rates")
-ax.set_yscale("log")
-ax.set_xlabel("Average Shortest Path Length")
-fig.savefig(save_dir+'Contribution_vs_ASPL.pdf',bbox_inches='tight')
-plt.close(fig)
+# fig, ax = plt.subplots()
+# ax.scatter(list(team_average_shortest_path_length_repos_unfold.keys()),[np.mean(s) for s in team_average_shortest_path_length_repos_unfold.values()],color=blue)
+# ax.set_ylabel("Team Contribution Rates")
+# ax.set_yscale("log")
+# ax.set_xlabel("Average Shortest Path Length")
+# fig.savefig(save_dir+'Contribution_vs_ASPL.pdf',bbox_inches='tight')
+# plt.close(fig)
 
-fig, ax = plt.subplots()
-ax.scatter(list(team_centralizations_repos_unfold.keys()),[np.mean(s) for s in team_centralizations_repos_unfold.values()],color=blue)
-ax.set_ylabel("Team Contribution Rates")
-ax.set_yscale("log")
-ax.set_xlabel("Centralization")
-ax.set_xlim((0,1))
-fig.savefig(save_dir+'Contribution_vs_Centralization.pdf',bbox_inches='tight')
-plt.close(fig)
-
-
-fig, ax = plt.subplots()
-ax.scatter(list(team_average_clustering_repos_unfold.keys()),[np.mean(s) for s in team_average_clustering_repos_unfold.values()],color=blue)
-ax.set_ylabel("Team Contribution Rates")
-ax.set_yscale("log")
-ax.set_xlabel("Transitivity")
-ax.set_xlim((0,1))
-fig.savefig(save_dir+'Contribution_vs_Transitivity.pdf',bbox_inches='tight')
-plt.close(fig)
-
-fig, ax = plt.subplots()
-ax.bar(list(team_size_repos_unfold.keys()),[np.mean(s) for s in team_size_repos_unfold.values()],color=blue)
-ax.set_ylabel("Team Contribution Rates")
-ax.set_yscale("log")
-ax.set_xlabel("Team Size")
-ax.set_xlim((0,100))
-fig.savefig(save_dir+'Contribution_vs_Size.pdf',bbox_inches='tight')
-plt.close(fig)
-
-fig, ax = plt.subplots()
-ax.scatter(list(team_aspl_var_con.keys()),[np.mean(s) for s in team_aspl_var_con.values()],color=blue)
-ax.set_ylabel("Team Contribution Rates")
-ax.set_yscale("log")
-ax.set_xlabel("Variance of Average Shortest Path Length")
+# fig, ax = plt.subplots()
+# ax.scatter(list(team_centralizations_repos_unfold.keys()),[np.mean(s) for s in team_centralizations_repos_unfold.values()],color=blue)
+# ax.set_ylabel("Team Contribution Rates")
+# ax.set_yscale("log")
+# ax.set_xlabel("Centralization")
 # ax.set_xlim((0,1))
-fig.savefig(save_dir+'Contribution_vs_VarASPL.pdf',bbox_inches='tight')
-plt.close(fig)
+# fig.savefig(save_dir+'Contribution_vs_Centralization.pdf',bbox_inches='tight')
+# plt.close(fig)
 
-fig, ax = plt.subplots()
-ax.scatter(list(team_cen_var_con.keys()),[np.mean(s) for s in team_cen_var_con.values()],color=blue)
-ax.set_ylabel("Team Contribution Rates")
-ax.set_yscale("log")
-ax.set_xlabel("Variance of Centralization")
-# ax.set_xlim((0,1))
-fig.savefig(save_dir+'Contribution_vs_VarCentralization.pdf',bbox_inches='tight')
-plt.close(fig)
 
-fig, ax = plt.subplots()
-ax.scatter(list(team_ac_var_con.keys()),[np.mean(s) for s in team_ac_var_con.values()],color=blue)
-ax.set_ylabel("Team Contribution Rates")
-ax.set_yscale("log")
-ax.set_xlabel("Variance of Transitivity")
+# fig, ax = plt.subplots()
+# ax.scatter(list(team_average_clustering_repos_unfold.keys()),[np.mean(s) for s in team_average_clustering_repos_unfold.values()],color=blue)
+# ax.set_ylabel("Team Contribution Rates")
+# ax.set_yscale("log")
+# ax.set_xlabel("Transitivity")
 # ax.set_xlim((0,1))
-fig.savefig(save_dir+'Contribution_vs_VarTransitivity.pdf',bbox_inches='tight')
-plt.close(fig)
+# fig.savefig(save_dir+'Contribution_vs_Transitivity.pdf',bbox_inches='tight')
+# plt.close(fig)
+
+# fig, ax = plt.subplots()
+# ax.bar(list(team_size_repos_unfold.keys()),[np.mean(s) for s in team_size_repos_unfold.values()],color=blue)
+# ax.set_ylabel("Team Contribution Rates")
+# ax.set_yscale("log")
+# ax.set_xlabel("Team Size")
+# ax.set_xlim((0,100))
+# fig.savefig(save_dir+'Contribution_vs_Size.pdf',bbox_inches='tight')
+# plt.close(fig)
+
+# fig, ax = plt.subplots()
+# ax.scatter(list(team_aspl_var_con.keys()),[np.mean(s) for s in team_aspl_var_con.values()],color=blue)
+# ax.set_ylabel("Team Contribution Rates")
+# ax.set_yscale("log")
+# ax.set_xlabel("Variance of Average Shortest Path Length")
+# # ax.set_xlim((0,1))
+# fig.savefig(save_dir+'Contribution_vs_VarASPL.pdf',bbox_inches='tight')
+# plt.close(fig)
+
+# fig, ax = plt.subplots()
+# ax.scatter(list(team_cen_var_con.keys()),[np.mean(s) for s in team_cen_var_con.values()],color=blue)
+# ax.set_ylabel("Team Contribution Rates")
+# ax.set_yscale("log")
+# ax.set_xlabel("Variance of Centralization")
+# # ax.set_xlim((0,1))
+# fig.savefig(save_dir+'Contribution_vs_VarCentralization.pdf',bbox_inches='tight')
+# plt.close(fig)
+
+# fig, ax = plt.subplots()
+# ax.scatter(list(team_ac_var_con.keys()),[np.mean(s) for s in team_ac_var_con.values()],color=blue)
+# ax.set_ylabel("Team Contribution Rates")
+# ax.set_yscale("log")
+# ax.set_xlabel("Variance of Transitivity")
+# # ax.set_xlim((0,1))
+# fig.savefig(save_dir+'Contribution_vs_VarTransitivity.pdf',bbox_inches='tight')
+# plt.close(fig)
 
 
 # right_lim = 20
@@ -394,15 +394,15 @@ fig, ax = plt.subplots()
 ax.hist(team_centralizations,bins=50,color=blue)
 # ax.set_xlabel("Team Centralization")
 ax.set_ylabel("# of Teams")
-# ax.set_xticklabels(ax.get_xticklabels())
-# ax.set_yticklabels(ax.get_yticklabels())
+ax.set_xticks([x*0.25 for x in range(5)])
 fig.savefig(save_dir+'TeamCentralization.pdf',bbox_inches='tight')
 plt.close(fig)
 
 fig, ax = plt.subplots()
 ax.hist(team_average_shortest_path_length,bins=50,color=blue)
 # ax.set_xlabel("Team Average Shortest Path Length")
-# ax.set_xlim(left=0,right=1)
+ax.set_xlim(left=1,right=3)
+ax.set_xticks([x/10 for x in range(10,31,5)])
 ax.set_ylabel("# of Teams")
 fig.savefig(save_dir+'TeamASPL.pdf',bbox_inches='tight')
 plt.close(fig)
@@ -519,49 +519,49 @@ plt.close(fig)
 
 
 
-import statsmodels.stats.weightstats as st
-print(len(topic_ratio),len(topic_repos),len(topic_cnts))
-total_topic = sorted(topic_repos.items(), key=lambda x:x[1], reverse=True)
-total_topic = [t[0] for t in total_topic if t[0] in topic_ratio]
-topic_ratio_A = np.array([topic_ratio[t] for t in total_topic[:len(total_topic)//4]])
-topic_ratio_B = np.array([topic_ratio[t] for t in total_topic[len(total_topic)//4*3:]])
-t,p_twotail,df=st.ttest_ind(topic_ratio_A,topic_ratio_B,usevar='unequal')
-print(t,p_twotail,df) # df=17973.968873398284
-topic_ratio_mean = topic_ratio_A.mean()-topic_ratio_B.mean()
-print(topic_ratio_mean)
-topic_ratio_CI = 1.9601*np.sqrt(np.square(topic_ratio_A.std())/topic_ratio_A.size+np.square(topic_ratio_B.std())/topic_ratio_B.size)
-print(topic_ratio_mean-topic_ratio_CI, topic_ratio_mean+topic_ratio_CI)
-print(topic_ratio_mean/np.sqrt((topic_ratio_A.std()**2*topic_ratio_A.size+topic_ratio_B.std()**2*topic_ratio_B.size)/(topic_ratio_A.size+topic_ratio_B.size-2)))
+# import statsmodels.stats.weightstats as st
+# print(len(topic_ratio),len(topic_repos),len(topic_cnts))
+# total_topic = sorted(topic_repos.items(), key=lambda x:x[1], reverse=True)
+# total_topic = [t[0] for t in total_topic if t[0] in topic_ratio]
+# topic_ratio_A = np.array([topic_ratio[t] for t in total_topic[:len(total_topic)//4]])
+# topic_ratio_B = np.array([topic_ratio[t] for t in total_topic[len(total_topic)//4*3:]])
+# t,p_twotail,df=st.ttest_ind(topic_ratio_A,topic_ratio_B,usevar='unequal')
+# print(t,p_twotail,df) # df=17973.968873398284
+# topic_ratio_mean = topic_ratio_A.mean()-topic_ratio_B.mean()
+# print(topic_ratio_mean)
+# topic_ratio_CI = 1.9601*np.sqrt(np.square(topic_ratio_A.std())/topic_ratio_A.size+np.square(topic_ratio_B.std())/topic_ratio_B.size)
+# print(topic_ratio_mean-topic_ratio_CI, topic_ratio_mean+topic_ratio_CI)
+# print(topic_ratio_mean/np.sqrt((topic_ratio_A.std()**2*topic_ratio_A.size+topic_ratio_B.std()**2*topic_ratio_B.size)/(topic_ratio_A.size+topic_ratio_B.size-2)))
 
-print(len(lang_ratio),len(lang_repos),len(language_cnts))
-total_lang = sorted(lang_repos.items(), key=lambda x:x[1], reverse=True)
-total_lang = [t[0] for t in total_lang if t[0] in lang_ratio]
-lang_ratio_A = np.array([lang_ratio[t] for t in total_lang[:len(total_lang)//4]])
-lang_ratio_B = np.array([lang_ratio[t] for t in total_lang[len(total_lang)//4*3:]])
-t,p_twotail,df=st.ttest_ind(lang_ratio_A,lang_ratio_B,usevar='unequal')
-print(t,p_twotail,df)  # df=138.91715475747554
-lang_ratio_mean = lang_ratio_A.mean()-lang_ratio_B.mean()
-print(lang_ratio_mean)
-lang_ratio_CI = 1.9772*np.sqrt(np.square(lang_ratio_A.std())/lang_ratio_A.size+np.square(lang_ratio_B.std())/lang_ratio_B.size)
-print(lang_ratio_mean-lang_ratio_CI, lang_ratio_mean+lang_ratio_CI)
-print(lang_ratio_mean/np.sqrt((lang_ratio_A.std()**2*lang_ratio_A.size+lang_ratio_B.std()**2*lang_ratio_B.size)/(lang_ratio_A.size+lang_ratio_B.size-2)))
+# print(len(lang_ratio),len(lang_repos),len(language_cnts))
+# total_lang = sorted(lang_repos.items(), key=lambda x:x[1], reverse=True)
+# total_lang = [t[0] for t in total_lang if t[0] in lang_ratio]
+# lang_ratio_A = np.array([lang_ratio[t] for t in total_lang[:len(total_lang)//4]])
+# lang_ratio_B = np.array([lang_ratio[t] for t in total_lang[len(total_lang)//4*3:]])
+# t,p_twotail,df=st.ttest_ind(lang_ratio_A,lang_ratio_B,usevar='unequal')
+# print(t,p_twotail,df)  # df=138.91715475747554
+# lang_ratio_mean = lang_ratio_A.mean()-lang_ratio_B.mean()
+# print(lang_ratio_mean)
+# lang_ratio_CI = 1.9772*np.sqrt(np.square(lang_ratio_A.std())/lang_ratio_A.size+np.square(lang_ratio_B.std())/lang_ratio_B.size)
+# print(lang_ratio_mean-lang_ratio_CI, lang_ratio_mean+lang_ratio_CI)
+# print(lang_ratio_mean/np.sqrt((lang_ratio_A.std()**2*lang_ratio_A.size+lang_ratio_B.std()**2*lang_ratio_B.size)/(lang_ratio_A.size+lang_ratio_B.size-2)))
 
 
-lang_ratio_array = []
-lang_repos_array = []
-for repo in lang_ratio:
-    lang_ratio_array.append(lang_ratio[repo])
-    lang_repos_array.append(lang_repos[repo])
+# lang_ratio_array = []
+# lang_repos_array = []
+# for repo in lang_ratio:
+#     lang_ratio_array.append(lang_ratio[repo])
+#     lang_repos_array.append(lang_repos[repo])
 
-topic_ratio_array = []
-topic_repos_array = []
-for repo in topic_ratio:
-    topic_ratio_array.append(topic_ratio[repo])
-    topic_repos_array.append(topic_repos[repo])
+# topic_ratio_array = []
+# topic_repos_array = []
+# for repo in topic_ratio:
+#     topic_ratio_array.append(topic_ratio[repo])
+#     topic_repos_array.append(topic_repos[repo])
 
-import scipy.stats as stats  
-print('\t\t\t\t\t\t\tr:\t\tp:')
-r,p = stats.pearsonr(topic_ratio_array,topic_repos_array)
-print('%s\t\t\t%f\t%f'%('Average # of teams in repo v. # of repos in topic',r,p))
-r,p = stats.pearsonr(lang_ratio_array,lang_repos_array)
-print('%s\t\t\t%f\t%f'%('Average # of teams in repo v. # of repos in language',r,p))
+# import scipy.stats as stats  
+# print('\t\t\t\t\t\t\tr:\t\tp:')
+# r,p = stats.pearsonr(topic_ratio_array,topic_repos_array)
+# print('%s\t\t\t%f\t%f'%('Average # of teams in repo v. # of repos in topic',r,p))
+# r,p = stats.pearsonr(lang_ratio_array,lang_repos_array)
+# print('%s\t\t\t%f\t%f'%('Average # of teams in repo v. # of repos in language',r,p))

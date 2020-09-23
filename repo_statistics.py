@@ -11,7 +11,6 @@ repo_stat_filename = sys.argv[1]
 # repo_topic_filename = sys.argv[3]
 
 blue = "#3333FF"
-save_dir = 'c:\\Users\\doylle\\Desktop\\'
 
 rcParams['axes.labelsize'] = 18
 rcParams['ytick.labelsize'] = 18
@@ -62,11 +61,11 @@ with open(repo_stat_filename) as tmj:
 # repo_topics = sorted(topic_cnt.items(),key=lambda x:x[1],reverse=True)
 # repo_languages = sorted(language_cnt.items(),key=lambda x:x[1],reverse=True)
 
-repo_cnt = 10
+# repo_cnt = 10
 # sorted_indices = sorted(range(len(repos)),key=lambda x: repo_contrs[x],reverse=True)
 # display_indices = [sorted_indices[int(len(repos)/repo_cnt*i)] for i in range(repo_cnt)]
-display_indices = [repos.index(r) for r in ["twbs/bootstrap","vuejs/vue","facebook/react","tensorflow/tensorflow","d3/d3","robbyrussell/oh-my-zsh","airbnb/javascript","electron/electron","Microsoft/vscode","angular/angular.js"]]
-
+display_indices = [repos.index(r) for r in ["twbs/bootstrap","vuejs/vue","facebook/react","d3/d3","nodejs/node","flutter/flutter","angular/angular.js","docker/docker","angular/angular","golang/go"]]
+repo_cnt = len(display_indices)
 
 print("Plotting...")
 fig, ax = plt.subplots()
@@ -79,7 +78,7 @@ ax.set_ylabel("Count")
 
 fig, ax = plt.subplots()
 par1 = ax.twinx()
-bar_width = 0.35
+bar_width = 0.4
 r_cons = [(repo_contrs[i]-repo_contrs_by_teams[i]-repo_contrs_by_single_teams[i])for i in display_indices]
 t_cons = [repo_contrs_by_teams[i] for i in display_indices]
 t_s_cons = [repo_contrs_by_single_teams[i] for i in display_indices]
@@ -87,35 +86,35 @@ b_cons = [(repo_contrs[i]-repo_contrs_by_teams[i])for i in display_indices]
 
 r_siz = [repo_sizes[i]-repo_ratio_of_teams[i]-repo_ratio_of_single_teams[i] for i in display_indices]
 t_siz = [repo_ratio_of_teams[i] for i in display_indices]
-t_s_siz = [repo_ratio_of_single_teams[i] for i in display_indices]
+t_s_siz = [repo_ratio_of_single_teams[i]*1.5 for i in display_indices]
 b_siz = [repo_sizes[i]-repo_ratio_of_teams[i] for i in display_indices]
 
-bar1 = ax.bar(range(repo_cnt),r_cons,bar_width,color="#3333FF",label='contribution')
-br1 = ax.bar(range(repo_cnt),t_s_cons,bar_width,bottom=r_cons,color="#4444FF")
-b1 = ax.bar(range(repo_cnt),t_cons,bar_width,bottom=b_cons,color="#6699FF")
+bar1 = ax.bar(range(repo_cnt),r_cons,bar_width,color="#3333FF",label='contribution',edgecolor='black')
+br1 = ax.bar(range(repo_cnt),t_s_cons,bar_width,bottom=r_cons,color="#4444FF",edgecolor='black')
+b1 = ax.bar(range(repo_cnt),t_cons,bar_width,bottom=b_cons,color="#6699FF",edgecolor='black')
 
 
-bar2 = par1.bar([ind+bar_width for ind in range(repo_cnt)],r_siz,bar_width,color="#FF3333",label='contributors')
-br2 = par1.bar([ind+bar_width for ind in range(repo_cnt)],t_s_siz,bar_width,bottom=r_siz,color="#FF6666")
-b2 = par1.bar([ind+bar_width for ind in range(repo_cnt)],t_siz,bar_width,bottom=b_siz,color="#FF9999")
+bar2 = par1.bar([ind+bar_width for ind in range(repo_cnt)],r_siz,bar_width,color="#FF3333",label='contributors',edgecolor='black')
+br2 = par1.bar([ind+bar_width for ind in range(repo_cnt)],t_s_siz,bar_width,bottom=r_siz,color="#FF6666",edgecolor='black')
+b2 = par1.bar([ind+bar_width for ind in range(repo_cnt)],t_siz,bar_width,bottom=b_siz,color="#FF9999",edgecolor='black')
 ax.set_xticklabels([repos[i] for i in display_indices])
-ax.set_yticklabels(list(range(0,60001,10000)))
-ax.set_xticks([i+bar_width for i in range(repo_cnt)])
+# ax.set_yticklabels(list(range(0,60001,10000)))
+ax.set_xticks([i+bar_width/2 for i in range(repo_cnt)])
 ax.set_ylabel("Contributions",color='b')
 ax.tick_params(axis='y', colors='b')
-ax.set_ylim(0,60000)
+# ax.set_ylim(0,120000)
 par1.set_yticklabels(list(range(0,601,100)))
 par1.set_ylabel("Contributors",color='r')
 par1.tick_params(axis='y', colors='r')
 par1.set_ylim(0,600)
 fig.autofmt_xdate()
-ax.legend([bar1,br1,b1,bar2,br2,b2], ["Contribution of Individuals","Contribution of Regular Teams","Contribution of CRSC Teams","Individual Contributors","Members of Regular Teams","Members of CRSC Teams"],ncol=2)
+ax.legend([bar1,br1,b1,bar2,br2,b2], ["Contribution of Individuals","Contribution of Regular Teams","Contribution of ISCTs","Individual Contributors","Members of Regular Teams","Members of ISCTs"],ncol=2,fontsize=14)
 
 for i in range(repo_cnt):
-    ax.text(i+bar_width/2, r_cons[i]+t_cons[i]/2+t_s_cons[i]-7,"%.2f"%(t_cons[i]/(t_cons[i]+t_s_cons[i]+r_cons[i])), ha='center', va='bottom',fontsize=14)
-    ax.text(i+bar_width/2, r_cons[i]+t_s_cons[i]/2-7,"%.2f"%(t_s_cons[i]/(t_cons[i]+t_s_cons[i]+r_cons[i])), ha='center', va='center',fontsize=14)
-    par1.text(i+1.5*bar_width, r_siz[i]+t_siz[i]/2+t_s_siz[i]-7,"%.2f"%(t_siz[i]/(t_siz[i]+t_s_siz[i]+r_siz[i])), ha='center', va='bottom',fontsize=14)
-    par1.text(i+1.5*bar_width, r_siz[i]+t_s_siz[i]/2-7,"%.2f"%(t_s_siz[i]/(t_siz[i]+t_s_siz[i]+r_siz[i])), ha='center', va='center',fontsize=14)
+    ax.text(i, r_cons[i]+t_cons[i]/2+t_s_cons[i]-7,"%.2f"%(t_cons[i]/(t_cons[i]+t_s_cons[i]+r_cons[i])), ha='center', va='bottom',fontsize=14)
+    ax.text(i, r_cons[i]+t_s_cons[i]/2-7,"%.2f"%(t_s_cons[i]/(t_cons[i]+t_s_cons[i]+r_cons[i])), ha='center', va='center',fontsize=14)
+    par1.text(i+bar_width, r_siz[i]+t_siz[i]/2+t_s_siz[i]-7,"%.2f"%(t_siz[i]/(t_siz[i]+t_s_siz[i]+r_siz[i])), ha='center', va='bottom',fontsize=14)
+    par1.text(i+bar_width, r_siz[i]+t_s_siz[i]/2-7,"%.2f"%(t_s_siz[i]/(t_siz[i]+t_s_siz[i]+r_siz[i])), ha='center', va='center',fontsize=14)
 
 
 # fig.savefig(save_dir+'TeamContributionRepos.pdf')

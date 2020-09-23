@@ -77,9 +77,11 @@ Workflow:
 11.Compute properties of each team:
 	python team_tags.py OSLOM\Edges.link OSLOM\teams.txt OSLOM\Edges_single.link OSLOM\teams_single.txt repo_features.json OSLOM\network_time.dat contributors.json repo_time.txt OSLOM\team_tags.txt
 12.Compute team level statistics and generate charts:
-	python team_statistics.py OSLOM\team_tags.txt
+	python team_statistics.py OSLOM\team_tags.txt repo_features.json
 13.Compute repo level statistics and generate charts:
 	python repo_statistics.py OSLOM\repo_statistics.txt
+14.
+	python repo_feature_statistics.py OSLOM\repo_feature_statistics.txt
 14.Generate the visualization of top 100 largest teams:
 	python pajek_repaint.py OSLOM\Edges.dat_oslo_files\pajek_file_0.net
 15.Open pajek_file_0_new_without_singleton.net in gephi(www.gephi.org)

@@ -1,5 +1,5 @@
 *.json
-OSLOM/Edges*
+OSLOM/
 *.dat
 *.json
 issuecomment/
@@ -10,3 +10,4 @@ issuecomment/
 *.cred
 *.log
 fix.py
+charts/

@@ -11,7 +11,7 @@ repo_feature_stat_filename = sys.argv[1]
 
 
 blue = "#3333FF"
-save_dir = 'c:\\Users\\doylle\\Desktop\\'
+# save_dir = 'chars/'
 
 print("Computing statistics...")
 reposize_teams = {}
@@ -87,7 +87,7 @@ cntrs = np.asarray(cntr_test_A[:,-1],dtype=np.float32)
 sizes = np.asarray(cntr_test_A[:,0],dtype=np.int32)
 forks = np.asarray(cntr_test_A[:,1],dtype=np.int32)
 contributors = np.asarray(cntr_test_A[:,2],dtype=np.int32)
-start_times = np.array([datetime.strptime(t, '%Y-%m-%dT%H:%M:%SZ').timestamp() for t in cntr_test_A[:,3]])
+start_times = np.array([datetime.strptime(t[0], '%Y-%m-%dT%H:%M:%SZ').timestamp() for t in cntr_test_A[:,3]])
 
 r,p = stats.pearsonr(sizes,cntrs)
 print(r,p)
